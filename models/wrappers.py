@@ -138,7 +138,7 @@ class StyleGAN2(BaseModel):
     def download_checkpoint(self, outfile):
         checkpoints = {
             'minerales': 'https://drive.google.com/uc?export=download&id=1VAr7Xa7UPRVxsbM7teDIwYIrujfIJwde',
-            'virgen': '',
+            'virgen': 'https://drive.google.com/uc?export=download&id=1AbpgPef7hg0v6TBmT8j5RitGf2aRom9R',
             'ffhq': 'https://drive.google.com/uc?export=download&id=1FJRwzAkV-XWbxgTwxEmEACvuqF5DsBiV',
             'church': 'https://drive.google.com/uc?export=download&id=1HFM694112b_im01JT7wop0faftw9ty5g',
             'car': 'https://drive.google.com/uc?export=download&id=1iRoWclWVbDBAy5iXYZrQnKYSbZUqXI6y',
