@@ -78,7 +78,7 @@ def load_components(class_name, inst):
         latent_types = [model.latent_space_name()]*n_comp,
         ranges = [(0, model.get_max_latents())]*n_comp,
     )
-    
+
     state.component_class = class_name # invalidates cache
     use_named_latents = False
     print('Loaded components for', class_name, 'from', dump_name)
@@ -101,7 +101,7 @@ def load_named_components(path, class_name):
             if data['latent_space'] != model.latent_space_name():
                 print('Skipping', dump_path, '(wrong latent space)')
                 continue
-            
+
             selected.append(data)
             print('Using', dump_path)
 
@@ -124,7 +124,7 @@ def load_named_components(path, class_name):
         components.layer_names.append(d['decomposition']['layer']) # only for act
         components.ranges.append((s, e))
         components.latent_types.append(d['latent_space']) # W or Z
-    
+
     use_named_latents = True
     print('Loaded named components')
 
@@ -146,7 +146,7 @@ def setup_model():
     feat_shape = inst.feature_shape[layer_name]
     sample_dims = np.prod(feat_shape)
 
-    # Initialize 
+    # Initialize
     if args.inputs:
         load_named_components(args.inputs, class_name)
     else:
@@ -198,7 +198,7 @@ def reset_sliders(zero_on_failure=True):
     coords = project_ortho(val - mean, comp)
     offset = torch.sum(coords[:n_sliders] * comp[:n_sliders], dim=0)
     scaled_coords = (coords.view(-1) / stdev).detach().cpu().numpy()
-    
+
     # Part representable by sliders
     if mode == 'activation':
         state.act_slider_offset = offset
@@ -213,7 +213,7 @@ def setup_ui():
 
     root = tk.Tk()
     scale = 1.0
-    app = TorchImageView(root, width=int(scale*1024), height=int(scale*1024), show_fps=False)
+    app = TorchImageView(root, width=int(scale*1024), height=int(scale*1024), show_fps=True)
     app.pack(fill=tk.BOTH, expand=tk.YES)
     root.protocol("WM_DELETE_WINDOW", shutdown)
     root.title('GANspace')
@@ -227,7 +227,7 @@ def setup_ui():
     ui_state = SimpleNamespace(
         sliders = [tk.DoubleVar(value=0.0) for _ in range(N_COMPONENTS)],
         scales = [],
-        truncation = tk.DoubleVar(value=0.9),
+        truncation = tk.DoubleVar(value=0.7),
         outclass = tk.StringVar(value=class_name),
         random_seed = tk.StringVar(value='0'),
         mode = tk.StringVar(value='latent'),
@@ -247,15 +247,15 @@ def setup_ui():
     def set_max(val):
         ui_state.edit_layer_end.set(max(int(val), ui_state.edit_layer_start.get()))
     max_latent_idx = model.get_max_latents() - 1
-    
+
     if not use_named_latents:
         slider_min = tk.Scale(toolbar, command=set_min, variable=ui_state.edit_layer_start,
-            label='Layer start', from_=0, to=max_latent_idx, orient=tk.HORIZONTAL).pack(fill="x")
+            label='Layer start', from_=0, to=max_latent_idx, orient=tk.HORIZONTAL, background="#26ff00").pack(fill="x")
         slider_max = tk.Scale(toolbar, command=set_max, variable=ui_state.edit_layer_end,
-            label='Layer end', from_=0, to=max_latent_idx, orient=tk.HORIZONTAL).pack(fill="x")
+            label='Layer end', from_=0, to=max_latent_idx, orient=tk.HORIZONTAL, background="#26ff00").pack(fill="x")
 
     # Scrollable list of components
-    outer_frame = tk.Frame(toolbar, borderwidth=2, relief=tk.SUNKEN)
+    outer_frame = tk.Frame(toolbar, borderwidth=2, relief=tk.GROOVE)
     canvas = tk.Canvas(outer_frame, highlightthickness=0, borderwidth=0)
     frame = tk.Frame(canvas)
     vsb = tk.Scrollbar(outer_frame, orient="vertical", command=canvas.yview)
@@ -281,9 +281,9 @@ def setup_ui():
 
     # Sliders and buttons
     for i in range(N_COMPONENTS):
-        inner = tk.Frame(frame, borderwidth=1, background="#aaaaaa")
+        inner = tk.Frame(frame, borderwidth=12, background="#26ff00")
         scale = tk.Scale(inner, variable=ui_state.sliders[i], from_=-ui_state.slider_max_val,
-            to=ui_state.slider_max_val, resolution=0.1, orient=tk.HORIZONTAL, label=components.names[i])
+            to=ui_state.slider_max_val, resolution=0.1, orient=tk.HORIZONTAL, label=components.names[i], background="#26ff00")
         scale.pack(fill=tk.X, side=tk.LEFT, expand=True)
         ui_state.scales.append(scale) # for changing label later
         if not use_named_latents:
@@ -292,17 +292,17 @@ def setup_ui():
 
     outer_frame.pack(fill="both", expand=True, pady=0)
 
-    tk.Button(toolbar, text="Reset", command=reset_sliders).pack(anchor=tk.CENTER, fill=tk.X, padx=4, pady=4)
+    tk.Button(toolbar, text="Reset", command=reset_sliders, background="#26ff00").pack(anchor=tk.CENTER, fill=tk.X, padx=4, pady=4)
 
     tk.Scale(toolbar, variable=ui_state.truncation, from_=0.01, to=1.0,
-        resolution=0.01, orient=tk.HORIZONTAL, label='Truncation').pack(fill="x")
+        resolution=0.01, orient=tk.HORIZONTAL, label='Truncation', background="#26ff00").pack(fill="x")
 
     tk.Scale(toolbar, variable=ui_state.batch_size, from_=1, to=9,
-        resolution=1, orient=tk.HORIZONTAL, label='Batch size').pack(fill="x")
-    
+        resolution=1, orient=tk.HORIZONTAL, label='Batch size', background="#26ff00").pack(fill="x")
+
     # Output class
     frame = tk.Frame(toolbar)
-    tk.Label(frame, text="Class name").pack(fill="x", side="left")
+    tk.Label(frame, text="Class name", background="#26ff00").pack(fill="x", side="left")
     tk.Entry(frame, textvariable=ui_state.outclass).pack(fill="x", side="right", expand=True, padx=5)
     frame.pack(fill=tk.X, pady=3)
 
@@ -312,11 +312,11 @@ def setup_ui():
         if seed_str.isdigit():
             resample_latent(int(seed_str))
     frame = tk.Frame(toolbar)
-    tk.Label(frame, text="Seed").pack(fill="x", side="left")
-    tk.Entry(frame, textvariable=ui_state.random_seed, width=12).pack(fill="x", side="left", expand=True, padx=2)
-    tk.Button(frame, text="Update", command=update_seed).pack(fill="y", side="right", padx=3)
+    tk.Label(frame, text="Seed", background="#26ff00").pack(fill="x", side="left")
+    tk.Entry(frame, textvariable=ui_state.random_seed, width=12, background="#26ff00").pack(fill="x", side="left", expand=True, padx=2)
+    tk.Button(frame, text="Update", command=update_seed, background="#26ff00").pack(fill="y", side="right", padx=3)
     frame.pack(fill=tk.X, pady=3)
-    
+
     # Get new latent or new components
     tk.Button(toolbar, text="Resample latent", command=partial(resample_latent, None, False)).pack(anchor=tk.CENTER, fill=tk.X, padx=4, pady=4)
     #tk.Button(toolbar, text="Recompute", command=recompute_components).pack(anchor=tk.CENTER, fill=tk.X)
@@ -335,24 +335,24 @@ def resample_latent(seed=None, only_style=False):
     class_name = ui_state.outclass.get()
     if class_name.isnumeric():
         class_name = int(class_name)
-    
+
     if hasattr(model, 'is_valid_class'):
         if not model.is_valid_class(class_name):
             return
 
     model.set_output_class(class_name)
-    
+
     B = ui_state.batch_size.get()
     state.seed = np.random.randint(np.iinfo(np.int32).max - B) if seed is None else seed
     ui_state.random_seed.set(str(state.seed))
-    
+
     # Use consecutive seeds along batch dimension (for easier reproducibility)
     trunc = ui_state.truncation.get()
     latents = [model.sample_latent(1, seed=state.seed + i, truncation=trunc) for i in range(B)]
 
     state.z = torch.cat(latents).clone().detach() # make leaf node
     assert state.z.is_leaf, 'Latent is not leaf node!'
-    
+
     if hasattr(model, 'truncation'):
         model.truncation = ui_state.truncation.get()
     print(f'Seeds: {state.seed} -> {state.seed + B - 1}' if B > 1 else f'Seed: {state.seed}')
@@ -360,7 +360,7 @@ def resample_latent(seed=None, only_style=False):
     torch.manual_seed(state.seed)
     model.partial_forward(state.z, layer_name)
     state.base_act = inst.retained_features()[layer_name]
-    
+
     reset_sliders(zero_on_failure=False)
 
     # Remove focus from text entry
@@ -371,14 +371,14 @@ def recompute_components():
     class_name = ui_state.outclass.get()
     if class_name.isnumeric():
         class_name = int(class_name)
-    
+
     if hasattr(model, 'is_valid_class'):
         if not model.is_valid_class(class_name):
             return
 
     if hasattr(model, 'set_output_class'):
         model.set_output_class(class_name)
-    
+
     load_components(class_name, inst)
 
 # Used to detect parameter changes for lazy recomputation
@@ -414,7 +414,7 @@ def on_draw():
 
     n_comp = len(ui_state.sliders)
     slider_vals = np.array([s.get() for s in ui_state.sliders], dtype=np.float32)
-    
+
     # Run model sparingly
     mode = ui_state.mode.get()
     latent_start = ui_state.edit_layer_start.get()
@@ -425,10 +425,10 @@ def on_draw():
             z_base = state.z - state.lat_slider_offset
             z_deltas = [0.0]*model.get_max_latents()
             z_delta_global = 0.0
-            
+
             n_comp = slider_vals.size
             act_deltas = {}
-            
+
             if torch.is_tensor(state.act_slider_offset):
                 act_deltas[layer_name] = -state.act_slider_offset
 
@@ -442,7 +442,7 @@ def on_draw():
                     continue
 
                 edit_mode = components.types[c] if use_named_latents else mode
-                
+
                 # Activation offset
                 if edit_mode in ['activation', 'both']:
                     delta = components.X_comp[c] * components.X_stdev[c] * coord
@@ -454,7 +454,7 @@ def on_draw():
                     delta = components.Z_comp[c] * components.Z_stdev[c] * coord
                     edit_range = components.ranges[c] if use_named_latents else (latent_start, latent_end)
                     full_range = (edit_range == (0, model.get_max_latents()))
-                    
+
                     # Single or multiple offsets?
                     if full_range:
                         z_delta_global = z_delta_global + delta
@@ -466,7 +466,7 @@ def on_draw():
             inst.remove_edits()
             for layer, delta in act_deltas.items():
                 inst.edit_layer(layer, offset=delta)
-            
+
             # Evaluate
             has_offsets = any(torch.is_tensor(t) for t in z_deltas)
             z_final = apply_edit(z_base, z_delta_global)
@@ -490,7 +490,7 @@ def export_direction(idx, button_frame):
     elif slider_value == 0:
         print('Modify selected slider to set usable range (currently 0)')
         return
-    
+
     popup = tk.Toplevel(root)
     popup.geometry("200x200+0+0")
     tk.Label(popup, text="Edit name").pack()
@@ -500,7 +500,7 @@ def export_direction(idx, button_frame):
     # tk.Scale(popup, from_=3, to=15, variable=strip_width,
     #    resolution=1, orient=tk.HORIZONTAL, length=200, label='Image strip width').pack()
     tk.Button(popup, text='OK', command=popup.quit).pack()
-    
+
     canceled = False
     def on_close():
         nonlocal canceled
@@ -595,12 +595,12 @@ def export_direction(idx, button_frame):
         sigmas = np.linspace(slider_value, -slider_value, strip_width.get(), dtype=np.float32)
         for sid, sigma in enumerate(sigmas):
             ui_state.sliders[idx].set(sigma)
-            
+
             # Advance and show results on screen
             on_draw()
             root.update()
             app.update()
-            
+
             batch_res = (255*img).byte().permute(0, 2, 3, 1).detach().cpu().numpy()
 
             for i, data in enumerate(batch_res):
@@ -632,7 +632,7 @@ def handle_keypress(code):
         reset_sliders()
     elif code == 114: # R
         pass #reset_sliders()
-    
+
 def shutdown():
     global pending_close
     pending_close = True
